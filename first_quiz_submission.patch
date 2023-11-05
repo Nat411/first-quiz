@@ -1,0 +1,279 @@
+diff --git a/part1/question1.py b/part1/question1.py
+index 5c99fdb..916fcd6 100644
+--- a/part1/question1.py
++++ b/part1/question1.py
+@@ -20,6 +20,8 @@ def get_city_temperature(city):
+       return 17
+    if city == "San Francisco":
+       return 16
++   if city == "New York":
++      return 14
+ 
+ def get_city_weather(city):
+ 
+@@ -29,7 +31,8 @@ def get_city_weather(city):
+      sky_condition = "cloudy"
+   elif city == "New York":
+      sky_condition = "rainy"
+-
++  elif city == "Quito":
++     sky_condition = "sunny"
+   temperature = get_city_temperature(city)
+ 
+   return str(temperature) + " degrees and " + sky_condition
+\ No newline at end of file
+diff --git a/part1/question2.py b/part1/question2.py
+index 34a9b01..85bd4f3 100644
+--- a/part1/question2.py
++++ b/part1/question2.py
+@@ -18,4 +18,7 @@
+ swapper = None
+ 
+ def run_swapper(list_of_tuples):
+-  return list(map(swapper, list_of_tuples))
+\ No newline at end of file
++  return list(map(swapper, list_of_tuples))
++
++def swapper(l):
++    return l[1], l[0]
+diff --git a/part1/question3.py b/part1/question3.py
+index 04fab99..5cff9f7 100644
+--- a/part1/question3.py
++++ b/part1/question3.py
+@@ -27,7 +27,7 @@
+ 
+ # This function should return an oven instance!
+ def make_oven():
+-  None
++  return Oven()
+ 
+ def alchemy_combine(oven, ingredients, temperature):
+   
+@@ -36,9 +36,49 @@ def alchemy_combine(oven, ingredients, temperature):
+ 
+   if temperature < 0:
+     oven.freeze()
++    print("a")
+   elif temperature >= 100:
++    print("b")
+     oven.boil()
+   else:
++    print("c")
+     oven.wait()
+ 
+-  return oven.get_output()
+\ No newline at end of file
++  return oven.get_output()
++
++class Oven:
++  def __init__(self):
++    self.ingredients = []
++    self.output = None
++    self.state = None
++
++  def add(self, item):
++    self.ingredients.append(item)
++
++  def freeze(self):
++    self.state = "freezed"
++
++  def boil(self):
++    self.state = "boiled"
++
++  def wait(self):
++    self.state = "waiting"
++
++  def combine(self):
++    if "lead" in self.ingredients and "mercury" in self.ingredients and self.state == "boiled":
++      self.output = "gold"
++
++    if "water" in self.ingredients and "air" in self.ingredients and self.state == "freezed":
++      self.output = "snow"
++
++    if "cheese" in self.ingredients and "dough" in self.ingredients and "tomato" in self.ingredients and self.state == "boiled":
++      self.output = "pizza"
++
++  def get_output(self):
++    self.combine()
++    return self.output
++  
++print(alchemy_combine(
++    make_oven(),
++    ["lead", "mercury"],
++    5000))
+\ No newline at end of file
+diff --git a/part1/question3_test.py b/part1/question3_test.py
+index 6cb6c89..fdaaad1 100644
+--- a/part1/question3_test.py
++++ b/part1/question3_test.py
+@@ -1,3 +1,5 @@
++from question3 import *
++
+ def test_alchemy_combine():
+ 
+   assert alchemy_combine(
+diff --git a/part1/question4.py b/part1/question4.py
+index 1e1b2bf..490f881 100644
+--- a/part1/question4.py
++++ b/part1/question4.py
+@@ -23,9 +23,9 @@ import pets_db
+ # The output should be a list of tuples in the format: (<pet name>, <species>, <age>)
+ 
+ sql_pets_owned_by_nobody = """
+-
+-Your SQL here.
+-
++SELECT name, species, age
++FROM animals
++WHERE animal_id NOT IN (SELECT pet_id FROM people_animals)
+ """
+ 
+ # Part 4.B:
+@@ -33,16 +33,22 @@ Your SQL here.
+ # The output should be an integer.
+ 
+ sql_pets_older_than_owner = """
+-
+-Your SQL here.
+-
++SELECT COUNT(*)
++FROM animals a
++INNER JOIN people_animals pa ON a.animal_id = pa.pet_id
++INNER JOIN people p ON p.person_id = pa.owner_id
++WHERE a.age > p.age
+ """
+ 
+ # Part 4.C: BONUS CHALLENGE! 
+ # Write SQL to select the pets that are owned by Bessie and nobody else.
+ # The output should be a list of tuples in the format: (<person name>, <pet name>, <species>)
+ sql_only_owned_by_bessie = """ 
+-
+-Your SQL here.
+-
+-"""
+\ No newline at end of file
++SELECT p.name, a.name, a.species
++FROM animals a
++INNER JOIN people_animals pa ON a.animal_id = pa.pet_id
++INNER JOIN people p ON p.person_id = pa.owner_id
++WHERE p.person_id = 2 AND NOT EXISTS (
++SELECT * FROM people_animals pa2 WHERE pa2.pet_id = pa.pet_id AND pa2.owner_id <> pa.owner_id
++)
++"""
+diff --git a/part1/question5.py b/part1/question5.py
+index f76654f..6b71854 100644
+--- a/part1/question5.py
++++ b/part1/question5.py
+@@ -1,3 +1,5 @@
++import _sqlite3
++import pets_db
+ ################################################################################
+ #     ____                          __     _                           ______
+ #    / __ \  __  __  ___    _____  / /_   (_)  ____    ____           / ____/
+@@ -19,8 +21,11 @@
+ # vegetarian integer
+ 
+ sql_create_favorite_foods = """
+-
+-Your SQL here.
++CREATE TABLE favorite_foods (
++    food_id integer,
++    name text,
++    vegetarian integer
++);
+ 
+ """
+ 
+@@ -29,9 +34,11 @@ Your SQL here.
+ # The test suite will verify the new changes by inserting some new rows. 
+ 
+ sql_alter_tables_with_favorite_food = """
++ALTER TABLE animals
++ADD COLUMN favorite_food_id integer;
+ 
+-Your SQL here.
+-
++ALTER TABLE people
++ADD COLUMN favorite_food_id integer;
+ """
+ 
+ # Part 5.C:
+@@ -40,6 +47,10 @@ Your SQL here.
+ 
+ sql_select_all_vegetarian_pets = """
+ 
+-Your SQL here.
++SELECT animals.name, favorite_foods.name
++FROM animals
++INNER JOIN favorite_foods  ON animals.favorite_food_id = food_id
++WHERE favorite_foods.vegetarian = 1
+ 
+-"""
+\ No newline at end of file
++
++"""
+diff --git a/part2/src/main/java/org/velezreyes/quiz/question6/Drink.java b/part2/src/main/java/org/velezreyes/quiz/question6/Drink.java
+index 61c1fdd..5eb842d 100644
+--- a/part2/src/main/java/org/velezreyes/quiz/question6/Drink.java
++++ b/part2/src/main/java/org/velezreyes/quiz/question6/Drink.java
+@@ -4,4 +4,6 @@ public interface Drink {
+   public String getName();
+ 
+   public boolean isFizzy();
++  
++  public int getPrice();
+ }
+\ No newline at end of file
+diff --git a/part2/src/main/java/org/velezreyes/quiz/question6/VendingMachineImpl.java b/part2/src/main/java/org/velezreyes/quiz/question6/VendingMachineImpl.java
+index 85742c4..73879d3 100644
+--- a/part2/src/main/java/org/velezreyes/quiz/question6/VendingMachineImpl.java
++++ b/part2/src/main/java/org/velezreyes/quiz/question6/VendingMachineImpl.java
+@@ -1,9 +1,45 @@
+ package org.velezreyes.quiz.question6;
++import java.util.HashMap;
++import java.util.Map;
+ 
+-public class VendingMachineImpl {
++public class VendingMachineImpl implements VendingMachine {
++  private int money;
++  private Map<String, Drink> drinks = new HashMap<>();;
+ 
++  public VendingMachineImpl(){
++    money = 0;
++    drinks.put("ScottCola", new DrinkImpl("ScottCola", true, 75));
++    drinks.put("KarenTea", new DrinkImpl("KarenTea", false, 100 ));
++  }
++  
++  @Override
++  public void insertQuarter(){
++    money += 25;
++    
++  }
++  @Override
++  public Drink pressButton(String name) throws NotEnoughMoneyException, UnknownDrinkException{
++    if (drinks.containsKey((name))){
++      Drink selected = drinks.get(name);
++
++      if(money >= selected.getPrice()){
++        money -= selected.getPrice();
++        return selected;
++      }
++      else{
++        throw new NotEnoughMoneyException();
++      }
++    }
++    else{
++      throw new UnknownDrinkException();
++    }
++    
++  }
+   public static VendingMachine getInstance() {
+-    // Fix me!
+-    return null;
++    return new VendingMachineImpl();
+   }
++
+ }
++
++
++
